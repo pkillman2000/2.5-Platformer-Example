@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 6033927902619590281}
   - component: {fileID: 1513138051343774054}
   - component: {fileID: 3028870445634434911}
+  - component: {fileID: 396200679818480411}
   m_Layer: 0
-  m_Name: Collectable
+  m_Name: Collectible
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -110,7 +111,20 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &396200679818480411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5711987951276676085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48a345a60c22d2b41a4846d3565008ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _value: 0
