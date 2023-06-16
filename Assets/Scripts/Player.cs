@@ -1,119 +1,89 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
-    private CharacterController _characterController;
-    private PlayerInputActions _inputActions;
+    private CharacterController _controller;
+    [SerializeField]
+    private float _speed = 5.0f;
+    [SerializeField]
+    private float _gravity = 1.0f;
+    [SerializeField]
+    private float _jumpHeight = 15.0f;
+    private float _yVelocity;
+    private bool _canDoubleJump = false;
+    [SerializeField]
+    private int _coins;
     private UIManager _uiManager;
+    [SerializeField]
+    private int _lives = 3;
 
-    [Header("Player")]
-    [SerializeField]
-    private float _walkSpeed;
-    [SerializeField]
-    private float _jumpHeight;
-    [SerializeField]
-    private float _doubleJumpHeight;
-    [SerializeField]
-    private float _jumpDuration;
-    private float _currentJumpHeight;
-    private Vector2 _movementInput;
-    private Vector3 _movementDirection;
-    private Vector3 _movementVelocity;
-    private bool _isJumping = false;
-    private int _collectibles = 0;
-
-    [Header("Environment")]
-    [SerializeField]
-    private float _gravity;
-
-    private void Start()
+    // Start is called before the first frame update
+    void Start()
     {
-        _characterController = GetComponent<CharacterController>();
-        if (_characterController == null )
+        _controller = GetComponent<CharacterController>();
+        _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
+
+        if (_uiManager == null)
         {
-            Debug.LogWarning("Character Controller is Null!");
+            Debug.LogError("The UI Manager is NULL."); 
         }
 
-        _inputActions = new PlayerInputActions(); // New input system
-        if (_inputActions == null )
+        _uiManager.UpdateLivesDisplay(_lives);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        float horizontalInput = Input.GetAxis("Horizontal");
+        Vector3 direction = new Vector3(horizontalInput, 0, 0);
+        Vector3 velocity = direction * _speed;
+
+        if (_controller.isGrounded == true)
         {
-            Debug.LogWarning("Character Controller is Null!");
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                _yVelocity = _jumpHeight;
+                _canDoubleJump = true;
+            }
         }
         else
         {
-            _inputActions.Player.Enable();
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (_canDoubleJump == true)
+                {
+                    _yVelocity += _jumpHeight;
+                    _canDoubleJump = false;
+                }
+            }
+
+            _yVelocity -= _gravity;
         }
 
-        _inputActions.Player.Jump.performed += Jump_performed;
-        _inputActions.Player.DoubleJump.performed += DoubleJump_performed;
+        velocity.y = _yVelocity;
 
-        _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
-        if(_uiManager == null )
+        _controller.Move(velocity * Time.deltaTime);
+    }
+
+    public void AddCoins()
+    {
+        _coins++;
+
+        _uiManager.UpdateCoinDisplay(_coins);
+    }
+
+    public void Damage()
+    {
+        _lives--;
+
+        _uiManager.UpdateLivesDisplay(_lives);
+
+        if (_lives < 1)
         {
-            Debug.LogWarning("UI Manager is Null!");
+            SceneManager.LoadScene(0);
         }
-
-    }
-
-
-    private void Update()
-    {
-        Movement();
-    }
-
-    private void Movement()
-    {
-        _movementInput = _inputActions.Player.Movement.ReadValue<Vector2>();
-        _movementDirection = new Vector3(_movementInput.x, 0, 0); // Direction
-
-        if (_isJumping) // Do not use gravity
-        {
-                _movementDirection.y += _currentJumpHeight;
-        }
-        else if (!_isJumping && !_characterController.isGrounded) // Use gravity
-        {
-            _movementDirection.y -= _gravity;
-        }
-        _movementVelocity = _movementDirection * _walkSpeed * Time.deltaTime; // Add walk speed
-        _characterController.Move(_movementVelocity); // Move player
-    }
-   
-    // Jump Begin
-    private void Jump_performed(InputAction.CallbackContext obj) // Jump
-    {
-        _currentJumpHeight = _jumpHeight;
-        StartCoroutine(JumpingCoroutine());
-    }
-
-    private void DoubleJump_performed(InputAction.CallbackContext obj) // Double Jump
-    {
-        _currentJumpHeight = _doubleJumpHeight;
-        StartCoroutine(JumpingCoroutine());
-    }
-
-    IEnumerator JumpingCoroutine()
-    {
-        if (_characterController.isGrounded)
-        {
-            _isJumping = true;
-        }
-
-        yield return new WaitForSeconds(_jumpDuration);
-        _isJumping = false;
-    }
-    // Jump End
-
-    public void CollectYellowSphere(int value)
-    {
-        _collectibles += value;
-        _uiManager.UpdateCollectibleValue(_collectibles);
-    }
-
-    private void OnDisable()
-    {
-        _inputActions.Player.Jump.performed -= Jump_performed;
     }
 }
